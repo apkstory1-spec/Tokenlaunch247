@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
 
 const SOURCES: Record<string, { url: string; network: string }> = {
   "kibu-bsc": { url: "https://kibu.bot/api/launches?limit=12&chain=bsc", network: "bsc" },
@@ -94,6 +95,21 @@ export async function GET(request: Request) {
 
     const data = await res.json();
     let rawLaunches: LaunchRaw[] = data?.launches || data?.tokens || data?.data || [];
+
+    // Save to database
+    try {
+      for (const launch of rawLaunches) {
+        const addr = launch.contractAddress || launch.contract_address || launch.address || launch.id;
+        if (addr) {
+          await query(
+            "INSERT INTO tokens (address, name, symbol) VALUES ($1, $2, $3) ON CONFLICT (address) DO NOTHING",
+            [addr, launch.name, launch.symbol]
+          );
+        }
+      }
+    } catch (dbError) {
+      console.error("Database sync error:", dbError);
+    }
 
     // FourClaw.Fun returns tokens with different field names -- normalize them
     if (source === "fourclaw-fun" && Array.isArray(rawLaunches)) {

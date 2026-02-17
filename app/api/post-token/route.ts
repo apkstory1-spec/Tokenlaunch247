@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
 
 const MOLTX_API = "https://moltx.io/v1";
 const MOLTBOOK_API = "https://www.moltbook.com/api/v1";
@@ -137,6 +138,16 @@ export async function POST(request: Request) {
         postId,
         apiKey,
       );
+
+      // Save to database
+      try {
+        await query(
+          "INSERT INTO tokens (address, name, symbol) VALUES ($1, $2, $3) ON CONFLICT (address) DO NOTHING",
+          [token.wallet, token.name, token.symbol]
+        );
+      } catch (dbError) {
+        console.error("Database save error:", dbError);
+      }
 
       return NextResponse.json({
         success: true,
