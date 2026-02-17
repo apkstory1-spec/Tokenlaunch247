@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query } from "../../../lib/db";
 
 const MOLTX_API = "https://moltx.io/v1";
 const MOLTBOOK_API = "https://www.moltbook.com/api/v1";

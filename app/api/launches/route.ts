@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query } from "../../../lib/db";
 
 const SOURCES: Record<string, { url: string; network: string }> = {
   "kibu-bsc": { url: "https://kibu.bot/api/launches?limit=12&chain=bsc", network: "bsc" },

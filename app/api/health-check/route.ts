@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { initDb } from "../../../lib/db";
 
 interface CheckResult {
   id: string;
   label: string;
-  category: "launchpad" | "agent" | "data" | "chain" | "image";
+  category: "launchpad" | "agent" | "data" | "chain" | "image" | "database";
   status: "online" | "offline" | "slow" | "checking";
   latency: number;
   message: string;
@@ -57,7 +58,35 @@ async function checkEndpoint(
 }
 
 export async function GET() {
+  const dbStart = Date.now();
+  let dbCheck: CheckResult;
+  try {
+    await initDb();
+    dbCheck = {
+      id: "postgres",
+      label: "PostgreSQL",
+      category: "database",
+      status: "online",
+      latency: Date.now() - dbStart,
+      message: "Connected & Initialized",
+      url: "DATABASE_URL",
+      siteUrl: "https://neon.tech",
+    };
+  } catch (e) {
+    dbCheck = {
+      id: "postgres",
+      label: "PostgreSQL",
+      category: "database",
+      status: "offline",
+      latency: Date.now() - dbStart,
+      message: String(e).slice(0, 80),
+      url: "DATABASE_URL",
+      siteUrl: "https://neon.tech",
+    };
+  }
+
   const checks = await Promise.all([
+    Promise.resolve(dbCheck),
     // Launchpads
     checkEndpoint("4claw", "4claw", "launchpad", "https://api.4claw.fun/api/launches?limit=1", "https://4claw.fun"),
     checkEndpoint("kibu", "Kibu", "launchpad", "https://kibu.bot/api/launches?limit=1&chain=bsc", "https://kibu.bot"),
